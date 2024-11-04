@@ -20,7 +20,14 @@ wall_pict = pygame.image.load("wall.jpg")
 tank_player_pict = pygame.image.load("tank.png")
 fon1 = pygame.image.load("fon1.png")
 bullet_pict = pygame.image.load("bullet.png")
-
+expl_pict1 = pygame.image.load("explosion_picts/explosion1.png")
+expl_pict2 = pygame.image.load("explosion_picts/explosion2.png")
+expl_pict3 = pygame.image.load("explosion_picts/explosion3.png")
+expl_pict4 = pygame.image.load("explosion_picts/explosion4.png")
+expl_pict5 = pygame.image.load("explosion_picts/explosion5.png")
+expl_pict6 = pygame.image.load("explosion_picts/explosion6.png")
+expl_pict7 = pygame.image.load("explosion_picts/explosion7.png")
+expl_list = [expl_pict1 , expl_pict2 , expl_pict3 , expl_pict4,expl_pict5,expl_pict6,expl_pict7]
 class Bullet(GameObject):
     def __init__(self, x, y, w, h, image, speed, direction=0):
         super().__init__(x, y, w, h, image)
@@ -38,6 +45,18 @@ class Bullet(GameObject):
             self.rect.x -= self.speed
 
 bullets = []
+
+class Explosion(GameObject):
+    def __init__(self,x,y,w,h,image):
+        super().__init__(x,y,w,h,image)
+        self.timer = 0
+        self.queue = 1
+    def anim_explosion(self):
+        if self.timer >= 35:
+            self.image = expl_list[self.queue]
+            self.queue += 1
+        self.timer +=1
+explosions = []
 
 class Player(GameObject):
     def __init__(self, x, y, w, h, image, speed):
@@ -84,7 +103,7 @@ class Player(GameObject):
         self.cooldown -= 1
         if pygame.mouse.get_pressed()[0] and self.cooldown <= 0:
             self.cooldown = 50
-            bullet = Bullet(self.rect.x + self.rect.w / 2, self.rect.y + self.rect.h / 2, 5, 5, bullet_pict, 5, self.direction)
+            bullet = Bullet(self.rect.x + self.rect.w / 3, self.rect.y + self.rect.h / 3, 10, 10, bullet_pict, 5, self.direction)
             bullets.append(bullet)
 
 def load_map(map_data):
@@ -102,7 +121,7 @@ def load_map(map_data):
                 blocks.append(wall)
                 walls.append(wall)
             if l == "5":
-                player1 = Player(x, y, 40, 40, tank_player_pict, 2)
+                player1 = Player(x, y, 40, 40,tank_player_pict, 2)
                 blocks.append(player1)
             x += 40
         y += 40
@@ -124,8 +143,15 @@ while game:
         bullet.move()
         bullet.update()
         if any(bullet.rect.colliderect(wall.rect) for wall in walls):
+            explosion = Explosion(bullet.rect.x , bullet.rect.y , 35 , 35 , expl_pict1)
+            explosions.append(explosion)
             bullets.remove(bullet)
-
+    for explosion in explosions:
+        if explosion.queue < 7 :
+            explosion.update()
+            explosion.anim_explosion()
+        else:
+            explosions.remove(explosion)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             game = False
