@@ -52,9 +52,10 @@ class Explosion(GameObject):
         self.timer = 0
         self.queue = 1
     def anim_explosion(self):
-        if self.timer >= 35:
+        if self.timer >= 5:
             self.image = expl_list[self.queue]
             self.queue += 1
+            self.timer = 0
         self.timer +=1
 explosions = []
 
@@ -150,8 +151,8 @@ while game:
         if explosion.queue < 7 :
             explosion.update()
             explosion.anim_explosion()
-        else:
-            explosions.remove(explosion)
+        # else:
+        #     explosions.remove(explosion)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             game = False
