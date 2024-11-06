@@ -17,6 +17,7 @@ class GameObject():
         window.blit(self.image, (self.rect.x, self.rect.y))
 
 wall_pict = pygame.image.load("wall.jpg")
+box_pic = pygame.image.load("box_pic.png")
 tank_player_pict = pygame.image.load("tank.png")
 fon1 = pygame.image.load("fon1.png")
 bullet_pict = pygame.image.load("bullet.png")
@@ -76,29 +77,29 @@ class Player(GameObject):
             self.direction = 0
             self.image = self.img_up
             new_rect = self.rect.move(0, -self.speed)
-            if new_rect.y >= 0 and not any(new_rect.colliderect(w.rect) for w in walls):
+            if new_rect.y >= 0 and not any(new_rect.colliderect(w.rect) for w in walls) and not any(new_rect.colliderect(b.rect) for b in boxs):
                 self.rect = new_rect
 
         if k[K_down]:
             self.direction = 2
             self.image = self.img_down
             new_rect = self.rect.move(0, self.speed)
-            if new_rect.y < win_size[1] and not any(new_rect.colliderect(w.rect) for w in walls):
+            if new_rect.y < win_size[1] and not any(new_rect.colliderect(w.rect) for w in walls) and not any(new_rect.colliderect(b.rect) for b in boxs):
                 self.rect = new_rect
 
         if k[K_left]:
             self.direction = 3
             self.image = self.img_left
             new_rect = self.rect.move(-self.speed, 0)
-            if new_rect.x >= 0 and not any(new_rect.colliderect(w.rect) for w in walls):
+            if new_rect.x >= 0 and not any(new_rect.colliderect(w.rect) for w in walls) and not any(new_rect.colliderect(b.rect) for b in boxs):
                 self.rect = new_rect
 
         if k[K_right]:
             self.direction = 1
             self.image = self.img_right
             new_rect = self.rect.move(self.speed, 0)
-            if new_rect.x < win_size[0] and not any(new_rect.colliderect(w.rect) for w in walls):
-                self.rect = new_rect
+            if new_rect.x < win_size[0] and not any(new_rect.colliderect(w.rect) for w in walls) and not any(new_rect.colliderect(b.rect) for b in boxs):
+                self.rect = new_rect 
 
     def shoot(self):
         self.cooldown -= 1
@@ -110,6 +111,7 @@ class Player(GameObject):
 def load_map(map_data):
     blocks = []
     walls = []
+    boxs = []
     fon = GameObject(0, 0, 800, 800, fon1)
     blocks.append(fon)
     x = 0
@@ -124,13 +126,17 @@ def load_map(map_data):
             if l == "5":
                 player1 = Player(x, y, 40, 40,tank_player_pict, 2)
                 blocks.append(player1)
+            if l == "2":
+                box = GameObject(x,y,40,40,box_pic)
+                blocks.append(box)
+                boxs.append(box)
             x += 40
         y += 40
         x = 0
-    return blocks, walls
+    return blocks, walls, boxs
 
 map_data = load_map(map1)
-map_blocks, walls = map_data
+map_blocks, walls, boxs = map_data
 clock = pygame.time.Clock()
 
 while game:
@@ -147,12 +153,20 @@ while game:
             explosion = Explosion(bullet.rect.x , bullet.rect.y , 35 , 35 , expl_pict1)
             explosions.append(explosion)
             bullets.remove(bullet)
+        for box in boxs[:]:
+            if bullet.rect.colliderect(box.rect):
+                explosion = Explosion(bullet.rect.x , bullet.rect.y , 35 , 35 , expl_pict1)
+                explosions.append(explosion)
+                bullets.remove(bullet)
+                boxs.remove(box)
+                map_blocks.remove(box)
+                break
     for explosion in explosions:
         if explosion.queue < 7 :
             explosion.update()
             explosion.anim_explosion()
-        # else:
-        #     explosions.remove(explosion)
+        else:
+            explosions.remove(explosion)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             game = False
